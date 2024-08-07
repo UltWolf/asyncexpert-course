@@ -1,5 +1,5 @@
-﻿using System.Collections.Generic;
-using BenchmarkDotNet.Attributes;
+﻿using BenchmarkDotNet.Attributes;
+using System.Collections.Generic;
 
 namespace Dotnetos.AsyncExpert.Homework.Module01.Benchmark
 {
@@ -13,7 +13,12 @@ namespace Dotnetos.AsyncExpert.Homework.Module01.Benchmark
         // 4. Open disassembler report and compare machine code
         // 
         // You can use the discussion panel to compare your results with other students
-
+        private readonly Dictionary<ulong, ulong> _cache = new Dictionary<ulong, ulong>
+        {
+            [0] = 0,
+            [1] = 1,
+            [2] = 1,
+        };
         [Benchmark(Baseline = true)]
         [ArgumentsSource(nameof(Data))]
         public ulong Recursive(ulong n)
@@ -26,14 +31,30 @@ namespace Dotnetos.AsyncExpert.Homework.Module01.Benchmark
         [ArgumentsSource(nameof(Data))]
         public ulong RecursiveWithMemoization(ulong n)
         {
-            return 0;
+            if (!_cache.TryGetValue(n, out ulong result))
+            {
+                return result;
+            }
+            _cache[n] = RecursiveWithMemoization(n - 2) + RecursiveWithMemoization(n - 1);
+            return _cache[n];
         }
-        
+
         [Benchmark]
         [ArgumentsSource(nameof(Data))]
         public ulong Iterative(ulong n)
         {
-            return 0;
+            if (n < 2)
+            {
+                return n;
+            }
+            ulong temp1 = 1, tmp2 = 1;
+            for (ulong i = 0; i < n; i++)
+            {
+                var temp = temp1 + tmp2;
+                temp1 = tmp2;
+                tmp2 = temp;
+            }
+            return tmp2;
         }
 
         public IEnumerable<ulong> Data()
